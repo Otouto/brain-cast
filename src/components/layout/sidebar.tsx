@@ -4,7 +4,6 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { 
-  LayoutDashboard, 
   Plus, 
   FileText, 
   Settings, 
@@ -75,12 +74,6 @@ export function Sidebar() {
         </div>
         
         <nav className="grid gap-1 px-2">
-          <SidebarLink 
-            href="/dashboard" 
-            icon={LayoutDashboard} 
-            title="Dashboard" 
-            isCollapsed={isCollapsed} 
-          />
           <SidebarLink 
             href="/edit-post" 
             icon={Plus} 
