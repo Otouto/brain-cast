@@ -19,9 +19,23 @@ Tasks are ordered cronologically from top to bottom.
 ## Pending Tasks 
 Tasks are prioritized by their order in the associated list. 
 
-- Task 4
-- Task 5
-- Task 6
+New Post Page:
+- Change cursor when user hover over interactive elements
+- Rid of Input/Preview Tabs, Just display preview below post creation section
+- Reduce width of Create Post Page
+- Add icon to the Brain Cast Logo
+- Set default template
+- Add input mic icon
+- Add constraint on image being added, allow only one image
+- Send to open AI
+- Handle loading flow and saving
+- Handle feedback with skeletons
+- Add choice for which platform to generate post
+- Stack previews on top of each other
+- Style the previews
+- button for publish individual posts
+- Button for all posts
+- Set status
 
 ## Backlog Tasks
 Tasks are prioritized by their order in the associated list. 
