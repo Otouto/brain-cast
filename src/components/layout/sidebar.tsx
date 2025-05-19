@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { 
   Plus, 
   FileText, 
@@ -12,9 +12,9 @@ import {
   ChevronRight,
   LogOut
 } from "lucide-react"
+import { useUser, useClerk } from "@clerk/nextjs"
 
 import { cn } from "@/lib/utils"
-import { currentUser } from "@/lib/mock-data"
 import { Button } from "@/components/ui/button"
 
 interface SidebarLinkProps {
@@ -47,6 +47,13 @@ const SidebarLink = ({ href, icon: Icon, title, isCollapsed }: SidebarLinkProps)
 
 export function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const { user } = useUser()
+  const { signOut } = useClerk()
+  const router = useRouter()
+  
+  const handleSignOut = () => {
+    signOut(() => router.push("/sign-in"))
+  }
   
   return (
     <div className={cn(
@@ -108,24 +115,34 @@ export function Sidebar() {
         )}>
           <div className="rounded-full bg-muted p-1">
             <img 
-              src={currentUser.image} 
-              alt={currentUser.name} 
+              src={user?.imageUrl || "https://via.placeholder.com/32"} 
+              alt={user?.fullName || "User"} 
               className="h-8 w-8 rounded-full" 
             />
           </div>
           {!isCollapsed && (
             <div className="flex flex-1 items-center justify-between">
               <div>
-                <p className="text-sm font-medium">{currentUser.name}</p>
-                <p className="text-xs text-muted-foreground">{currentUser.email}</p>
+                <p className="text-sm font-medium">{user?.fullName || "User"}</p>
+                <p className="text-xs text-muted-foreground">{user?.primaryEmailAddress?.emailAddress || "user@example.com"}</p>
               </div>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8"
+                onClick={handleSignOut}
+              >
                 <LogOut className="h-4 w-4" />
               </Button>
             </div>
           )}
           {isCollapsed && (
-            <Button variant="ghost" size="icon" className="h-8 w-8">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8"
+              onClick={handleSignOut}
+            >
               <LogOut className="h-4 w-4" />
             </Button>
           )}
