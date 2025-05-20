@@ -41,3 +41,15 @@ model Platform {
   updatedAt DateTime @updatedAt
   post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
 }
+
+model Template {
+  id          String   @id @default(cuid())
+  name        String
+  description String
+  platform    String   // 'linkedin', 'twitter', or 'all'
+  prompt      String   // LLM prompt template
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([name, platform], name: "name_platform")
+}

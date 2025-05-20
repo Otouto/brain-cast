@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { ToastProvider } from "@/components/toast-provider";
 import {
   ClerkProvider,
   SignedIn,
@@ -31,6 +32,7 @@ export default function RootLayout({
             enableSystem={false}
             disableTransitionOnChange
           >
+            <ToastProvider />
             <SignedIn>
               {children}
             </SignedIn>

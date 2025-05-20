@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { 
@@ -13,7 +13,7 @@ import {
   ChevronDown,
   LayoutTemplate 
 } from "lucide-react"
-import { mockSocialIntegrations, mockTemplates } from "@/lib/mock-data"
+import { mockSocialIntegrations } from "@/lib/mock-data"
 import { ConnectSocialButton } from "@/components/connect-social-button"
 import {
   DropdownMenu,
@@ -21,20 +21,22 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { getTemplates, formatContent, Template } from "@/lib/template-client"
 
 export default function EditPostPage() {
   const [rawContent, setRawContent] = useState("")
+  const [activeTab, setActiveTab] = useState("compose")
+  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null)
   const [formattedContent, setFormattedContent] = useState({
     linkedin: "",
     twitter: ""
   })
-  const [activeTab, setActiveTab] = useState("input")
   const [isGenerating, setIsGenerating] = useState(false)
-  const [selectedTemplate, setSelectedTemplate] = useState("")
-  const [image, setImage] = useState<string | null>(null)
   const [isPublishing, setIsPublishing] = useState(false)
-  const [isTemplateDropdownOpen, setIsTemplateDropdownOpen] = useState(false)
+  const [image, setImage] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [templates, setTemplates] = useState<Template[]>([])
+  const [isLoading, setIsLoading] = useState(true)
   
   // Social connections state
   const [socialConnections, setSocialConnections] = useState({
@@ -46,49 +48,44 @@ export default function EditPostPage() {
     )
   })
   
+  // Fetch templates on component mount
+  useEffect(() => {
+    const fetchTemplates = async () => {
+      try {
+        const data = await getTemplates()
+        setTemplates(data)
+      } catch (error) {
+        console.error('Failed to fetch templates:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    
+    fetchTemplates()
+  }, [])
+  
   // Handle content generation
-  const generateContent = () => {
-    if (!rawContent.trim()) return
+  const generateContent = async () => {
+    if (!rawContent.trim() || !selectedTemplate) return
     
     setIsGenerating(true)
     
-    // Mock the generation process with a timeout
-    setTimeout(() => {
-      // In design mode, we're just using a simple mock transformation
-      // In a real app, this would call an LLM API
-      
-      let linkedinContent = rawContent
-      let twitterContent = rawContent.length > 280 ? `${rawContent.slice(0, 277)}...` : rawContent
-      
-      // Apply different formatting based on selected template
-      if (selectedTemplate) {
-        const template = mockTemplates.find(t => t.id === selectedTemplate)
-        
-        if (template) {
-          if (template.name === "Professional Announcement") {
-            linkedinContent = `I'm excited to announce: ${rawContent}\n\n#ProfessionalAnnouncement #Career`
-            twitterContent = `Announcement: ${rawContent.slice(0, 240)}\n\n#Announcement`
-          } else if (template.name === "Engagement Question") {
-            linkedinContent = `${rawContent}\n\nWhat are your thoughts on this? Let me know in the comments below.\n\n#Engagement #Discussion`
-            twitterContent = `${twitterContent}\n\nWhat do you think? Reply with your thoughts!`
-          } else if (template.name === "Quick Tip") {
-            linkedinContent = `Quick tip for professionals:\n\n${rawContent}\n\n#QuickTip #ProfessionalAdvice`
-            twitterContent = `Pro tip: ${twitterContent}\n\n#QuickTip`
-          } else if (template.name === "Trending Topic Commentary") {
-            linkedinContent = `My take on this trending topic:\n\n${rawContent}\n\n#TrendingTopic #MyPerspective`
-            twitterContent = `Hot take: ${twitterContent}\n\n#Trending`
-          }
-        }
-      }
+    try {
+      // Call format API with the raw content and template ID
+      const formatted = await formatContent(rawContent, selectedTemplate)
       
       setFormattedContent({
-        linkedin: linkedinContent,
-        twitter: twitterContent,
+        linkedin: formatted.linkedin,
+        twitter: formatted.twitter,
       })
       
-      setIsGenerating(false)
       setActiveTab("preview")
-    }, 1500)
+    } catch (error) {
+      console.error('Error formatting content:', error)
+      // Show an error message to the user (in a real app)
+    } finally {
+      setIsGenerating(false)
+    }
   }
   
   // Handle image upload
@@ -162,7 +159,7 @@ export default function EditPostPage() {
   // Get template name for display
   const getSelectedTemplateName = () => {
     if (!selectedTemplate) return "Select Template"
-    const template = mockTemplates.find(t => t.id === selectedTemplate)
+    const template = templates.find(t => t.id === selectedTemplate)
     return template ? template.name : "Select Template"
   }
   
@@ -188,7 +185,7 @@ export default function EditPostPage() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-[300px]">
-                {mockTemplates.map((template) => (
+                {templates.map((template: Template) => (
                   <DropdownMenuItem 
                     key={template.id}
                     className="flex flex-col items-start p-2 cursor-pointer"
