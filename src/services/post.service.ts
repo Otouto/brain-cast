@@ -7,15 +7,15 @@ export async function createPost(data: {
   userId: string;
 }) {
   return await prisma.post.create({
-    data: data as any
+    data: data
   });
 }
 
 export async function getUserPosts(userId: string) {
   return await prisma.post.findMany({
     where: {
-      userId: userId as any
-    } as any,
+      userId: userId
+    },
     orderBy: {
       createdAt: 'desc'
     }
@@ -32,8 +32,8 @@ export async function getPostWithUser(id: string) {
   return await prisma.post.findUnique({
     where: { id },
     include: {
-      user: true as any
-    } as any
+      user: true
+    }
   });
 }
 
@@ -45,7 +45,7 @@ export async function updatePost(id: string, data: {
 }) {
   return await prisma.post.update({
     where: { id },
-    data: data as any
+    data: data
   });
 }
 

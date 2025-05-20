@@ -1,8 +1,6 @@
 import { prisma } from '@/lib/prisma';
 
-// Temporary workaround for TypeScript errors
-// @ts-ignore - platform exists at runtime but TypeScript doesn't know about it
-const platformClient = (prisma as any).platform;
+const platformClient = prisma.platform;
 
 export async function createPlatform(data: {
   name: string;

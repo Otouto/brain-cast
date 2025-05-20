@@ -1,8 +1,6 @@
 import { prisma } from '@/lib/prisma';
 
-// Temporary workaround for TypeScript errors
-// @ts-ignore - template exists at runtime but TypeScript doesn't know about it
-const templateClient = (prisma as any).template;
+const templateClient = prisma.template;
 
 export async function createTemplate(data: {
   name: string;

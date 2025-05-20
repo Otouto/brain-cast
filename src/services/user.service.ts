@@ -8,7 +8,7 @@ export async function createUser(data: {
 }) {
   try {
     return await prisma.user.create({
-      data: data as any
+      data: data
     });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError) {
@@ -35,8 +35,8 @@ export async function getUserByEmail(email: string) {
 export async function getUserByClerkId(clerkId: string) {
   return await prisma.user.findFirst({
     where: {
-      clerkId: clerkId as any
-    } as any
+      clerkId: clerkId
+    }
   });
 }
 
