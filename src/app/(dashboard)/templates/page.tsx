@@ -19,6 +19,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { toast } from "sonner"
+import { TemplateCard } from "./_components/TemplateCard"
 
 export default function TemplatesPage() {
   const [templates, setTemplates] = useState<Template[]>([])
@@ -65,6 +66,13 @@ export default function TemplatesPage() {
       setTemplateToDelete(null)
     }
   }
+
+  // Placeholder for edit functionality
+  const handleEditClick = (template: Template) => {
+    // TODO: Implement edit navigation or modal opening
+    console.log("Edit template:", template)
+    toast.info(`Editing template: ${template.name}`) // Example feedback
+  }
   
   return (
     <div className="space-y-6">
@@ -85,48 +93,22 @@ export default function TemplatesPage() {
         <div className="flex justify-center py-8">
           <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
         </div>
+      ) : templates.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed rounded-lg text-center">
+          <h3 className="text-xl font-semibold">No templates yet!</h3>
+          <p className="text-muted-foreground mt-2">
+            Click the "New Template" button to create your first template.
+          </p>
+        </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {templates.map((template: Template) => (
-            <div key={template.id} className="rounded-lg border bg-card p-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold">{template.name}</h2>
-                <div className="flex space-x-1">
-                  {(template.platform === "linkedin" || template.platform === "all") && (
-                    <div className="h-6 w-6 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold">
-                      <Linkedin className="h-3 w-3" />
-                    </div>
-                  )}
-                  {(template.platform === "twitter" || template.platform === "all") && (
-                    <div className="h-6 w-6 rounded-full bg-blue-400 flex items-center justify-center text-white text-xs font-bold">
-                      <Twitter className="h-3 w-3" />
-                    </div>
-                  )}
-                </div>
-              </div>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {template.description}
-              </p>
-              <div className="mt-4 text-sm text-muted-foreground border-t pt-4">
-                <div className="flex items-center justify-between">
-                  <span>Platform</span>
-                  <span className="font-medium text-foreground capitalize">
-                    {template.platform === 'all' ? 'All Platforms' : template.platform}
-                  </span>
-                </div>
-              </div>
-              <div className="mt-6 flex items-center justify-end gap-2">
-                <Button variant="outline" size="sm">Edit</Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="text-destructive hover:text-destructive"
-                  onClick={() => handleDeleteClick(template)}
-                >
-                  Delete
-                </Button>
-              </div>
-            </div>
+            <TemplateCard 
+              key={template.id}
+              template={template}
+              onEditClick={handleEditClick}
+              onDeleteClick={handleDeleteClick}
+            />
           ))}
         </div>
       )}
