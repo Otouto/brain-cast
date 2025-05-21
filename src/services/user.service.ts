@@ -33,16 +33,33 @@ export async function getUserByEmail(email: string) {
 }
 
 export async function getUserByClerkId(clerkId: string) {
-  return await prisma.user.findFirst({
-    where: {
-      clerkId: clerkId
-    }
+  return await prisma.user.findUnique({
+    where: { clerkId }
   });
 }
 
-export async function updateUser(id: string, data: {
+export async function updateUser(clerkId: string, data: {
   name?: string;
   email?: string;
+}) {
+  // First try to find the user by clerkId
+  const user = await getUserByClerkId(clerkId);
+  if (!user) {
+    throw new Error(`No user found with clerkId: ${clerkId}`);
+  }
+  
+  // Then update using the internal user id
+  return await prisma.user.update({
+    where: { id: user.id },
+    data
+  });
+}
+
+// Update a user directly by their internal id
+export async function updateUserById(id: string, data: {
+  name?: string;
+  email?: string;
+  clerkId?: string;
 }) {
   return await prisma.user.update({
     where: { id },
@@ -50,7 +67,21 @@ export async function updateUser(id: string, data: {
   });
 }
 
-export async function deleteUser(id: string) {
+export async function deleteUser(clerkId: string) {
+  // First try to find the user by clerkId
+  const user = await getUserByClerkId(clerkId);
+  if (!user) {
+    throw new Error(`No user found with clerkId: ${clerkId}`);
+  }
+  
+  // Then delete using the internal user id
+  return await prisma.user.delete({
+    where: { id: user.id }
+  });
+}
+
+// Delete a user directly by their internal id
+export async function deleteUserById(id: string) {
   return await prisma.user.delete({
     where: { id }
   });

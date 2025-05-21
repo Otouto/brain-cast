@@ -1,7 +1,12 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 
-// Use catch-all patterns to ensure all routes under sign-in and sign-up are public
-const isPublicRoute = createRouteMatcher(['/sign-in(.*)', '/sign-up(.*)']);
+// Use catch-all patterns to ensure all routes under sign-in and sign-up are public,
+// and exclude webhook routes which need to be accessible without authentication
+const isPublicRoute = createRouteMatcher([
+  '/sign-in(.*)', 
+  '/sign-up(.*)',
+  '/api/webhooks/clerk(.*)'
+]);
 
 export default clerkMiddleware(async (auth, req) => {
   if (!isPublicRoute(req)) {
