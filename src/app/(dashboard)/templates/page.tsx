@@ -20,10 +20,12 @@ import {
 } from "@/components/ui/alert-dialog"
 import { toast } from "sonner"
 import { TemplateCard } from "./_components/TemplateCard"
+import { CreateTemplateDialog } from "./_components/CreateTemplateDialog"
 
 export default function TemplatesPage() {
   const [templates, setTemplates] = useState<Template[]>([])
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
   const [templateToDelete, setTemplateToDelete] = useState<Template | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
@@ -43,6 +45,11 @@ export default function TemplatesPage() {
     
     fetchTemplates()
   }, [])
+
+  // Handle template creation
+  const handleTemplateCreated = (newTemplate: Template) => {
+    setTemplates(prev => [newTemplate, ...prev])
+  }
 
   // Handle template deletion
   const handleDeleteClick = (template: Template) => {
@@ -83,7 +90,7 @@ export default function TemplatesPage() {
             Manage your content generation templates
           </p>
         </div>
-        <Button>
+        <Button onClick={() => setCreateDialogOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
           New Template
         </Button>
@@ -112,6 +119,13 @@ export default function TemplatesPage() {
           ))}
         </div>
       )}
+
+      {/* Create template dialog */}
+      <CreateTemplateDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onTemplateCreated={handleTemplateCreated}
+      />
 
       {/* Delete confirmation dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
