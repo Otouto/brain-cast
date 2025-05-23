@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import { 
   getTemplateById, 
   updateTemplate, 
   deleteTemplate 
 } from '@/services/template.service';
+import { getAuthenticatedUserId } from '@/services/auth.service';
 
 // GET /api/templates/[id]
 export async function GET(
@@ -12,14 +12,13 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const authData = await auth();
-    const userId = authData.userId;
+    const userId = await getAuthenticatedUserId();
     
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    const template = await getTemplateById(params.id);
+    const template = await getTemplateById(params.id, userId);
     
     if (!template) {
       return NextResponse.json({ error: 'Template not found' }, { status: 404 });
@@ -41,15 +40,14 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
-    const authData = await auth();
-    const userId = authData.userId;
+    const userId = await getAuthenticatedUserId();
     
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
     const body = await request.json();
-    const updatedTemplate = await updateTemplate(params.id, {
+    const updatedTemplate = await updateTemplate(params.id, userId, {
       name: body.name,
       description: body.description,
       platform: body.platform,
@@ -72,14 +70,13 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const authData = await auth();
-    const userId = authData.userId;
+    const userId = await getAuthenticatedUserId();
     
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
-    await deleteTemplate(params.id);
+    await deleteTemplate(params.id, userId);
     
     return NextResponse.json({ success: true }, { status: 200 });
   } catch (error) {

@@ -21,12 +21,15 @@ import {
 import { toast } from "sonner"
 import { TemplateCard } from "./_components/TemplateCard"
 import { CreateTemplateDialog } from "./_components/CreateTemplateDialog"
+import { EditTemplateDialog } from "./_components/EditTemplateDialog"
 
 export default function TemplatesPage() {
   const [templates, setTemplates] = useState<Template[]>([])
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [templateToDelete, setTemplateToDelete] = useState<Template | null>(null)
+  const [templateToEdit, setTemplateToEdit] = useState<Template | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   // Fetch templates on component mount
@@ -49,6 +52,15 @@ export default function TemplatesPage() {
   // Handle template creation
   const handleTemplateCreated = (newTemplate: Template) => {
     setTemplates(prev => [newTemplate, ...prev])
+  }
+
+  // Handle template update
+  const handleTemplateUpdated = (updatedTemplate: Template) => {
+    setTemplates(prev => 
+      prev.map(template => 
+        template.id === updatedTemplate.id ? updatedTemplate : template
+      )
+    )
   }
 
   // Handle template deletion
@@ -74,11 +86,10 @@ export default function TemplatesPage() {
     }
   }
 
-  // Placeholder for edit functionality
+  // Handle template edit
   const handleEditClick = (template: Template) => {
-    // TODO: Implement edit navigation or modal opening
-    console.log("Edit template:", template)
-    toast.info(`Editing template: ${template.name}`) // Example feedback
+    setTemplateToEdit(template)
+    setEditDialogOpen(true)
   }
   
   return (
@@ -125,6 +136,14 @@ export default function TemplatesPage() {
         open={createDialogOpen}
         onOpenChange={setCreateDialogOpen}
         onTemplateCreated={handleTemplateCreated}
+      />
+
+      {/* Edit template dialog */}
+      <EditTemplateDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        template={templateToEdit}
+        onTemplateUpdated={handleTemplateUpdated}
       />
 
       {/* Delete confirmation dialog */}
