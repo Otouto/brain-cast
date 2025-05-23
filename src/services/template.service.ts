@@ -1,53 +1,89 @@
 import { prisma } from '@/lib/prisma';
 
-const templateClient = prisma.template;
+/**
+ * Template service following database integration rules:
+ * - Use Prisma as the ONLY database client
+ * - Use the User Table "id" for referencing the user not the "clerkId"
+ * - Keep database logic in dedicated service layers
+ */
 
 export async function createTemplate(data: {
   name: string;
   description: string;
   platform: string;
   prompt: string;
+  userId: string;
 }) {
-  return await templateClient.create({
+  return await prisma.template.create({
     data
   });
 }
 
-export async function getTemplates() {
-  return await templateClient.findMany({
+export async function getTemplates(userId: string) {
+  return await prisma.template.findMany({
+    where: {
+      userId
+    },
     orderBy: {
       createdAt: 'desc'
     }
   });
 }
 
-export async function getTemplateById(id: string) {
-  return await templateClient.findUnique({
-    where: { id }
+export async function getTemplateById(id: string, userId: string) {
+  return await prisma.template.findFirst({
+    where: { 
+      id,
+      userId
+    }
   });
 }
 
-export async function updateTemplate(id: string, data: {
+export async function updateTemplate(id: string, userId: string, data: {
   name?: string;
   description?: string;
   platform?: string;
   prompt?: string;
 }) {
-  return await templateClient.update({
+  // First verify the template belongs to the user
+  const existingTemplate = await prisma.template.findFirst({
+    where: {
+      id,
+      userId
+    }
+  });
+
+  if (!existingTemplate) {
+    throw new Error('Template not found or not owned by user');
+  }
+
+  return await prisma.template.update({
     where: { id },
     data
   });
 }
 
-export async function deleteTemplate(id: string) {
-  return await templateClient.delete({
+export async function deleteTemplate(id: string, userId: string) {
+  // First verify the template belongs to the user
+  const existingTemplate = await prisma.template.findFirst({
+    where: {
+      id,
+      userId
+    }
+  });
+
+  if (!existingTemplate) {
+    throw new Error('Template not found or not owned by user');
+  }
+
+  return await prisma.template.delete({
     where: { id }
   });
 }
 
-export async function formatContent(content: string, templateId: string) {
-  // Get the template
-  const template = await getTemplateById(templateId);
+export async function formatContent(content: string, templateId: string, userId: string) {
+  // Get the template (ensuring it belongs to the user)
+  const template = await getTemplateById(templateId, userId);
   
   if (!template) {
     throw new Error('Template not found');
