@@ -29,6 +29,7 @@ export default function EditPostPage() {
     if (success) {
       // Content generated successfully, could show toast notification here
     }
+    return success
   }
   
   // Handle publish with validation
@@ -70,6 +71,8 @@ export default function EditPostPage() {
             onGenerate={handleGenerateContent}
             isGenerating={contentEditor.isGenerating}
             canGenerate={!!contentEditor.rawContent.trim() && !!templateSelection.selectedTemplate}
+            error={contentEditor.error}
+            generationProgress={contentEditor.generationProgress}
           />
           
           {/* Image Upload */}
