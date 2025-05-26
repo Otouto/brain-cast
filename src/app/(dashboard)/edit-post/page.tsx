@@ -1,8 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { 
   Image as ImageIcon, 
   Linkedin, 
@@ -13,7 +11,6 @@ import {
   ChevronDown,
   LayoutTemplate 
 } from "lucide-react"
-import { mockSocialIntegrations } from "@/lib/mock-data"
 import { ConnectSocialButton } from "@/components/connect-social-button"
 import {
   DropdownMenu,
@@ -21,133 +18,37 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { getTemplates, formatContent, Template } from "@/lib/template-client"
+import { Template } from "@/lib/template-client"
+import {
+  useImageUpload,
+  useSocialConnections,
+  useTemplateSelection,
+  useContentEditor,
+  usePublishing
+} from "@/hooks"
 
 export default function EditPostPage() {
-  const [rawContent, setRawContent] = useState("")
-  const [activeTab, setActiveTab] = useState("compose")
-  const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null)
-  const [formattedContent, setFormattedContent] = useState({
-    linkedin: "",
-    twitter: ""
-  })
-  const [isGenerating, setIsGenerating] = useState(false)
-  const [isPublishing, setIsPublishing] = useState(false)
-  const [image, setImage] = useState<string | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const [templates, setTemplates] = useState<Template[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  // Custom hooks
+  const imageUpload = useImageUpload()
+  const socialConnections = useSocialConnections()
+  const templateSelection = useTemplateSelection()
+  const contentEditor = useContentEditor()
+  const publishing = usePublishing()
   
-  // Social connections state
-  const [socialConnections, setSocialConnections] = useState({
-    linkedin: mockSocialIntegrations.some(integration => 
-      integration.platform === 'linkedin' && integration.connected
-    ),
-    twitter: mockSocialIntegrations.some(integration => 
-      integration.platform === 'twitter' && integration.connected
+  // Handle content generation with template integration
+  const handleGenerateContent = async () => {
+    const success = await contentEditor.generateContent(templateSelection.selectedTemplate)
+    if (success) {
+      // Content generated successfully, could show toast notification here
+    }
+  }
+  
+  // Handle publish with validation
+  const handlePublishClick = async () => {
+    await publishing.handlePublish(
+      socialConnections.isAnyPlatformConnected(),
+      contentEditor.hasGeneratedContent()
     )
-  })
-  
-  // Fetch templates on component mount
-  useEffect(() => {
-    const fetchTemplates = async () => {
-      try {
-        const data = await getTemplates()
-        setTemplates(data)
-      } catch (error) {
-        console.error('Failed to fetch templates:', error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-    
-    fetchTemplates()
-  }, [])
-  
-  // Handle content generation
-  const generateContent = async () => {
-    if (!rawContent.trim() || !selectedTemplate) return
-    
-    setIsGenerating(true)
-    
-    try {
-      // Call format API with the raw content and template ID
-      const formatted = await formatContent(rawContent, selectedTemplate)
-      
-      setFormattedContent({
-        linkedin: formatted.linkedin,
-        twitter: formatted.twitter,
-      })
-      
-      setActiveTab("preview")
-    } catch (error) {
-      console.error('Error formatting content:', error)
-      // Show an error message to the user (in a real app)
-    } finally {
-      setIsGenerating(false)
-    }
-  }
-  
-  // Handle image upload
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    
-    const reader = new FileReader()
-    reader.onload = () => {
-      if (typeof reader.result === 'string') {
-        setImage(reader.result)
-      }
-    }
-    reader.readAsDataURL(file)
-  }
-  
-  const triggerFileInput = () => {
-    fileInputRef.current?.click()
-  }
-  
-  const handleRemoveImage = () => {
-    setImage(null)
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
-    }
-  }
-  
-  // Connect social accounts
-  const handleConnectLinkedin = () => {
-    setSocialConnections(prev => ({
-      ...prev,
-      linkedin: true
-    }))
-  }
-  
-  const handleConnectTwitter = () => {
-    setSocialConnections(prev => ({
-      ...prev,
-      twitter: true
-    }))
-  }
-  
-  // Mock publish function
-  const handlePublish = () => {
-    if (!socialConnections.linkedin && !socialConnections.twitter) {
-      alert("Please connect at least one social media account before publishing.")
-      return
-    }
-    
-    setIsPublishing(true)
-    
-    // Simulate publish delay
-    setTimeout(() => {
-      setIsPublishing(false)
-      // Here you would normally redirect to posts list
-      alert("Post published successfully! (This is a mock function)")
-    }, 2000)
-  }
-  
-  // Handle save as draft
-  const handleSaveAsDraft = () => {
-    alert("Post saved as draft! (This is a mock function)")
   }
   
   const currentDate = new Date().toLocaleDateString('en-US', {
@@ -155,13 +56,6 @@ export default function EditPostPage() {
     day: 'numeric',
     year: 'numeric'
   })
-
-  // Get template name for display
-  const getSelectedTemplateName = () => {
-    if (!selectedTemplate) return "Select Template"
-    const template = templates.find(t => t.id === selectedTemplate)
-    return template ? template.name : "Select Template"
-  }
   
   return (
     <div className="space-y-4">
@@ -180,16 +74,16 @@ export default function EditPostPage() {
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="flex items-center gap-2">
                   <LayoutTemplate className="h-4 w-4" />
-                  <span>{getSelectedTemplateName()}</span>
+                  <span>{templateSelection.getSelectedTemplateName()}</span>
                   <ChevronDown className="h-4 w-4 ml-2" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-[300px]">
-                {templates.map((template: Template) => (
+                {templateSelection.templates.map((template: Template) => (
                   <DropdownMenuItem 
                     key={template.id}
                     className="flex flex-col items-start p-2 cursor-pointer"
-                    onClick={() => setSelectedTemplate(template.id)}
+                    onClick={() => templateSelection.setSelectedTemplate(template.id)}
                   >
                     <div className="flex items-center justify-between w-full">
                       <span className="font-medium">{template.name}</span>
@@ -221,22 +115,22 @@ export default function EditPostPage() {
             <textarea
               className="min-h-[150px] w-full rounded-md border bg-background p-3 text-sm"
               placeholder="Type your raw content here..."
-              value={rawContent}
-              onChange={(e) => setRawContent(e.target.value)}
+              value={contentEditor.rawContent}
+              onChange={(e) => contentEditor.setRawContent(e.target.value)}
             />
             
             <div className="mt-3 flex items-center justify-between">
               <div className="text-sm text-muted-foreground">
-                {rawContent.length} characters
-                {rawContent.length > 280 && (
+                {contentEditor.rawContent.length} characters
+                {contentEditor.rawContent.length > 280 && (
                   <span className="ml-2 text-yellow-500">(Twitter limit: 280)</span>
                 )}
               </div>
               <Button 
-                onClick={generateContent} 
-                disabled={!rawContent.trim() || isGenerating}
+                onClick={handleGenerateContent} 
+                disabled={!contentEditor.rawContent.trim() || contentEditor.isGenerating}
               >
-                {isGenerating ? (
+                {contentEditor.isGenerating ? (
                   <>
                     <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
                     Generating...
@@ -251,16 +145,16 @@ export default function EditPostPage() {
             <h2 className="text-lg font-semibold mb-3">Add Image</h2>
             <input
               type="file"
-              ref={fileInputRef}
+              ref={imageUpload.fileInputRef}
               accept="image/*"
               className="hidden"
-              onChange={handleImageUpload}
+              onChange={imageUpload.handleImageUpload}
             />
             
-            {image ? (
+            {imageUpload.image ? (
               <div className="relative">
                 <img 
-                  src={image} 
+                  src={imageUpload.image} 
                   alt="Uploaded preview" 
                   className="max-h-[200px] mx-auto rounded-md" 
                 />
@@ -268,7 +162,7 @@ export default function EditPostPage() {
                   variant="destructive"
                   size="sm"
                   className="absolute top-2 right-2"
-                  onClick={handleRemoveImage}
+                  onClick={imageUpload.handleRemoveImage}
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -276,7 +170,7 @@ export default function EditPostPage() {
             ) : (
               <div 
                 className="flex items-center justify-center h-[120px] rounded-md border border-dashed bg-muted/50 cursor-pointer"
-                onClick={triggerFileInput}
+                onClick={imageUpload.triggerFileInput}
               >
                 <div className="text-center flex flex-col items-center">
                   <ImageIcon className="h-8 w-8 text-muted-foreground mb-2" />
@@ -285,7 +179,7 @@ export default function EditPostPage() {
                   </p>
                   <Button variant="outline" size="sm" onClick={(e) => {
                     e.stopPropagation();
-                    triggerFileInput();
+                    imageUpload.triggerFileInput();
                   }}>
                     <Upload className="mr-2 h-3 w-3" />
                     Upload
@@ -296,13 +190,13 @@ export default function EditPostPage() {
           </div>
           
           {/* Preview Section */}
-          {(formattedContent.linkedin || formattedContent.twitter) && (
+          {(contentEditor.formattedContent.linkedin || contentEditor.formattedContent.twitter) && (
             <div className="space-y-3">
               <h2 className="text-lg font-semibold">Preview</h2>
               
               <div className="grid gap-4 md:grid-cols-2">
                 {/* LinkedIn Preview */}
-                {formattedContent.linkedin && (
+                {contentEditor.formattedContent.linkedin && (
                   <div className="rounded-lg border bg-card p-3">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
@@ -311,8 +205,8 @@ export default function EditPostPage() {
                       </div>
                       <ConnectSocialButton 
                         platform="linkedin"
-                        isConnected={socialConnections.linkedin}
-                        onConnect={handleConnectLinkedin}
+                        isConnected={socialConnections.socialConnections.linkedin}
+                        onConnect={socialConnections.handleConnectLinkedin}
                       />
                     </div>
                     
@@ -325,12 +219,12 @@ export default function EditPostPage() {
                         </div>
                       </div>
                       <div className="whitespace-pre-wrap mb-3 text-sm max-h-[120px] overflow-y-auto">
-                        {formattedContent.linkedin}
+                        {contentEditor.formattedContent.linkedin}
                       </div>
                       
-                      {image && (
+                      {imageUpload.image && (
                         <div className="mb-3">
-                          <img src={image} alt="Post image" className="rounded-md max-h-[100px] w-auto" />
+                          <img src={imageUpload.image} alt="Post image" className="rounded-md max-h-[100px] w-auto" />
                         </div>
                       )}
                       
@@ -350,18 +244,15 @@ export default function EditPostPage() {
                     <div className="mt-2">
                       <textarea
                         className="w-full rounded-md border bg-background p-2 text-xs h-[60px]"
-                        value={formattedContent.linkedin}
-                        onChange={(e) => setFormattedContent({
-                          ...formattedContent,
-                          linkedin: e.target.value
-                        })}
+                        value={contentEditor.formattedContent.linkedin}
+                        onChange={(e) => contentEditor.updateFormattedContent("linkedin", e.target.value)}
                       />
                     </div>
                   </div>
                 )}
                 
                 {/* Twitter Preview */}
-                {formattedContent.twitter && (
+                {contentEditor.formattedContent.twitter && (
                   <div className="rounded-lg border bg-card p-3">
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
@@ -370,8 +261,8 @@ export default function EditPostPage() {
                       </div>
                       <ConnectSocialButton 
                         platform="twitter"
-                        isConnected={socialConnections.twitter}
-                        onConnect={handleConnectTwitter}
+                        isConnected={socialConnections.socialConnections.twitter}
+                        onConnect={socialConnections.handleConnectTwitter}
                       />
                     </div>
                     
@@ -389,12 +280,12 @@ export default function EditPostPage() {
                         </div>
                       </div>
                       <div className="whitespace-pre-wrap mb-3 text-sm max-h-[120px] overflow-y-auto">
-                        {formattedContent.twitter}
+                        {contentEditor.formattedContent.twitter}
                       </div>
                       
-                      {image && (
+                      {imageUpload.image && (
                         <div className="mb-3">
-                          <img src={image} alt="Post image" className="rounded-md max-h-[100px] w-auto" />
+                          <img src={imageUpload.image} alt="Post image" className="rounded-md max-h-[100px] w-auto" />
                         </div>
                       )}
                       
@@ -419,11 +310,8 @@ export default function EditPostPage() {
                     <div className="mt-2">
                       <textarea
                         className="w-full rounded-md border bg-background p-2 text-xs h-[60px]"
-                        value={formattedContent.twitter}
-                        onChange={(e) => setFormattedContent({
-                          ...formattedContent,
-                          twitter: e.target.value
-                        })}
+                        value={contentEditor.formattedContent.twitter}
+                        onChange={(e) => contentEditor.updateFormattedContent("twitter", e.target.value)}
                       />
                     </div>
                   </div>
@@ -433,15 +321,15 @@ export default function EditPostPage() {
           )}
           
           <div className="flex justify-end space-x-2">
-            <Button variant="secondary" onClick={handleSaveAsDraft}>
+            <Button variant="secondary" onClick={publishing.handleSaveAsDraft}>
               Save as Draft
             </Button>
             <Button 
               variant="default" 
-              onClick={handlePublish}
-              disabled={isPublishing || (!socialConnections.linkedin && !socialConnections.twitter) || (!formattedContent.linkedin && !formattedContent.twitter)}
+              onClick={handlePublishClick}
+              disabled={publishing.isPublishing || !socialConnections.isAnyPlatformConnected() || !contentEditor.hasGeneratedContent()}
             >
-              {isPublishing ? (
+              {publishing.isPublishing ? (
                 <>
                   <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
                   Publishing...
