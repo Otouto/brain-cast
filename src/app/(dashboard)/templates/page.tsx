@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Linkedin, Twitter, Plus } from "lucide-react"
+import { Linkedin, Twitter, Plus, AlertCircle, RefreshCw } from "lucide-react"
 import { 
   getTemplates, 
   deleteTemplate, 
@@ -31,15 +31,18 @@ export default function TemplatesPage() {
   const [templateToDelete, setTemplateToDelete] = useState<Template | null>(null)
   const [templateToEdit, setTemplateToEdit] = useState<Template | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   // Fetch templates on component mount
   useEffect(() => {
     const fetchTemplates = async () => {
       try {
+        setError(null)
         const data = await getTemplates()
         setTemplates(data)
       } catch (error) {
         console.error('Failed to fetch templates:', error)
+        setError('Failed to load templates. Please check your connection and try again.')
         toast.error('Failed to load templates')
       } finally {
         setIsLoading(false)
@@ -48,6 +51,23 @@ export default function TemplatesPage() {
     
     fetchTemplates()
   }, [])
+
+  // Retry function for error recovery
+  const retryFetch = async () => {
+    setIsLoading(true)
+    setError(null)
+    
+    try {
+      const data = await getTemplates()
+      setTemplates(data)
+    } catch (error) {
+      console.error('Failed to fetch templates on retry:', error)
+      setError('Failed to load templates. Please check your connection and try again.')
+      toast.error('Failed to load templates')
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   // Handle template creation
   const handleTemplateCreated = (newTemplate: Template) => {
@@ -111,11 +131,25 @@ export default function TemplatesPage() {
         <div className="flex justify-center py-8">
           <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
         </div>
+      ) : error ? (
+        <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed rounded-lg text-center">
+          <div className="flex items-center gap-2 text-destructive mb-4">
+            <AlertCircle className="h-6 w-6" />
+            <h3 className="text-xl font-semibold">Unable to load templates</h3>
+          </div>
+          <p className="text-muted-foreground mb-4 max-w-md">
+            {error}
+          </p>
+          <Button onClick={retryFetch} variant="outline">
+            <RefreshCw className="mr-2 h-4 w-4" />
+            Try Again
+          </Button>
+        </div>
       ) : templates.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-12 border-2 border-dashed rounded-lg text-center">
           <h3 className="text-xl font-semibold">No templates yet!</h3>
           <p className="text-muted-foreground mt-2">
-            Click the "New Template" button to create your first template.
+            Click the &quot;New Template&quot; button to create your first template.
           </p>
         </div>
       ) : (
@@ -152,7 +186,7 @@ export default function TemplatesPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the "{templateToDelete?.name}" template.
+              This will permanently delete the &quot;{templateToDelete?.name}&quot; template.
               This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>

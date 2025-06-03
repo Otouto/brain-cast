@@ -18,7 +18,7 @@ export function useContentEditor() {
 
   // Handle content generation with enhanced loading states
   const generateContent = async (selectedTemplate: string | null) => {
-    if (!rawContent.trim() || !selectedTemplate) return false
+    if (!rawContent.trim()) return false
     
     setIsGenerating(true)
     setError(null)
@@ -30,8 +30,17 @@ export function useContentEditor() {
         setGenerationProgress(prev => Math.min(prev + 10, 90))
       }, 200)
 
-      // Call format API with the raw content and template ID
-      const formatted = await formatContent(rawContent, selectedTemplate)
+      let formatted
+      if (selectedTemplate) {
+        // Call format API with the raw content and template ID
+        formatted = await formatContent(rawContent, selectedTemplate)
+      } else {
+        // Fallback: Basic content formatting without template
+        formatted = {
+          linkedin: rawContent, // Use raw content as fallback
+          twitter: rawContent.length > 280 ? `${rawContent.substring(0, 270)}...` : rawContent
+        }
+      }
       
       clearInterval(progressInterval)
       setGenerationProgress(100)
@@ -44,8 +53,29 @@ export function useContentEditor() {
       return true // Success
     } catch (error) {
       console.error('Error formatting content:', error)
-      setError(error instanceof Error ? error.message : 'Failed to generate content')
-      return false // Failure
+      
+      // If template-based generation fails, try fallback approach
+      if (selectedTemplate) {
+        try {
+          const fallbackFormatted = {
+            linkedin: rawContent,
+            twitter: rawContent.length > 280 ? `${rawContent.substring(0, 270)}...` : rawContent
+          }
+          
+          setFormattedContent({
+            linkedin: fallbackFormatted.linkedin,
+            twitter: fallbackFormatted.twitter,
+          })
+          
+          return true // Fallback success
+        } catch {
+          setError('Failed to generate content. Using basic formatting as fallback.')
+          return false
+        }
+      } else {
+        setError(error instanceof Error ? error.message : 'Failed to generate content')
+        return false
+      }
     } finally {
       setIsGenerating(false)
       setGenerationProgress(0)

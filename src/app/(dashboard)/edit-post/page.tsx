@@ -25,6 +25,12 @@ export default function EditPostPage() {
   
   // Handle content generation with template integration
   const handleGenerateContent = async () => {
+    // Check if templates are available first
+    if (templateSelection.error) {
+      // If templates failed to load, still allow generation with a default approach
+      console.log('Templates unavailable, attempting generation without template')
+    }
+    
     const success = await contentEditor.generateContent(templateSelection.selectedTemplate)
     if (success) {
       // Content generated successfully, could show toast notification here
@@ -62,6 +68,9 @@ export default function EditPostPage() {
             templates={templateSelection.templates}
             selectedTemplateName={templateSelection.getSelectedTemplateName()}
             onTemplateSelect={templateSelection.setSelectedTemplate}
+            isLoading={templateSelection.isLoading}
+            error={templateSelection.error}
+            onRetry={templateSelection.retryFetch}
           />
 
           {/* Content Input */}
@@ -70,7 +79,7 @@ export default function EditPostPage() {
             onContentChange={contentEditor.setRawContent}
             onGenerate={handleGenerateContent}
             isGenerating={contentEditor.isGenerating}
-            canGenerate={!!contentEditor.rawContent.trim() && !!templateSelection.selectedTemplate}
+            canGenerate={!!contentEditor.rawContent.trim() && (!!templateSelection.selectedTemplate || templateSelection.templates.length > 0)}
             error={contentEditor.error}
             generationProgress={contentEditor.generationProgress}
           />
