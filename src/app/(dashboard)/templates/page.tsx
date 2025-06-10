@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Linkedin, Twitter, Plus, AlertCircle, RefreshCw } from "lucide-react"
+import { Plus, AlertCircle, RefreshCw } from "lucide-react"
 import { 
   getTemplates, 
   deleteTemplate, 

@@ -93,7 +93,7 @@ Please apply the template instructions and create optimized versions for both Li
     let parsedContent: ProcessedContent;
     try {
       parsedContent = JSON.parse(responseContent);
-    } catch (parseError) {
+    } catch {
       // Fallback: try to extract content if JSON parsing fails
       console.warn('Failed to parse OpenAI response as JSON, attempting fallback extraction');
       throw new Error('Invalid response format from OpenAI');
