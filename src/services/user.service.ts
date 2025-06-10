@@ -1,5 +1,5 @@
 import { prisma } from '@/lib/prisma';
-import { Prisma } from '@prisma/client';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 export async function createUser(data: {
   clerkId: string;
@@ -11,7 +11,7 @@ export async function createUser(data: {
       data: data
     });
   } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    if (error instanceof PrismaClientKnownRequestError) {
       if (error.code === 'P2002') {
         throw new Error(`User with this ${error.meta?.target} already exists`);
       }

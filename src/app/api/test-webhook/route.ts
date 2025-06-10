@@ -4,7 +4,7 @@ export const config = {
   runtime: 'edge'
 };
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   return NextResponse.json({ status: 'OK', message: 'Webhook endpoint accessible' });
 }
 

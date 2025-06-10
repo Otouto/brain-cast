@@ -7,7 +7,6 @@ import {
   ClerkProvider,
   SignedIn,
   SignedOut,
-  RedirectToSignIn,
 } from '@clerk/nextjs';
 
 const inter = Inter({ subsets: ["latin"] });
