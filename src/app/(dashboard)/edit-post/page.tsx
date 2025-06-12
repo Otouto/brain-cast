@@ -45,6 +45,15 @@ export default function EditPostPage() {
       contentEditor.hasGeneratedContent()
     )
   }
+
+  // Handle save as draft with all required data
+  const handleSaveAsDraftClick = async () => {
+    await publishing.handleSaveAsDraft(
+      contentEditor.rawContent,
+      contentEditor.formattedContent,
+      imageUpload.image ?? undefined
+    )
+  }
   
   const currentDate = new Date().toLocaleDateString('en-US', {
     month: 'short',
@@ -130,9 +139,10 @@ export default function EditPostPage() {
           
           {/* Publishing Controls */}
           <PublishingControls
-            onSaveAsDraft={publishing.handleSaveAsDraft}
+            onSaveAsDraft={handleSaveAsDraftClick}
             onPublish={handlePublishClick}
             isPublishing={publishing.isPublishing}
+            isSaving={publishing.isSaving}
             canPublish={socialConnections.isAnyPlatformConnected() && contentEditor.hasGeneratedContent()}
           />
         </div>
