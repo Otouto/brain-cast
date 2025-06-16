@@ -32,6 +32,16 @@ export interface CreatePostDraftData {
   imageUrl?: string;
 }
 
+export interface UpdatePostDraftData {
+  title: string;
+  content: string;
+  formattedContent: {
+    linkedin?: string;
+    twitter?: string;
+  };
+  imageUrl?: string;
+}
+
 export async function createPostDraft(data: CreatePostDraftData): Promise<Post> {
   const response = await fetch('/api/posts', {
     method: 'POST',
@@ -43,6 +53,22 @@ export async function createPostDraft(data: CreatePostDraftData): Promise<Post> 
   
   if (!response.ok) {
     throw new Error('Failed to create post draft');
+  }
+  
+  return response.json();
+}
+
+export async function updatePostDraft(id: string, data: UpdatePostDraftData): Promise<Post> {
+  const response = await fetch(`/api/posts/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+  
+  if (!response.ok) {
+    throw new Error('Failed to update post draft');
   }
   
   return response.json();

@@ -28,11 +28,16 @@ export function useImageUpload() {
     }
   }
 
+  const setImageFromUrl = (url: string) => {
+    setImage(url)
+  }
+
   return {
     image,
     fileInputRef,
     handleImageUpload,
     triggerFileInput,
-    handleRemoveImage
+    handleRemoveImage,
+    setImageFromUrl
   }
 } 
