@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import { Prisma } from '@prisma/client';
+import { DbPost, TransformedPost } from '@/lib/types';
 
 /**
  * Post service following database integration rules:
@@ -214,4 +215,38 @@ export async function deletePost(id: string) {
   return await prisma.post.delete({
     where: { id }
   });
+}
+
+// Transform database post to match UI expectations
+export function transformPost(dbPost: DbPost): TransformedPost {
+  // Create formattedContent object from platforms
+  const formattedContent: { linkedin?: string; twitter?: string } = {}
+  
+  dbPost.platforms.forEach((platform) => {
+    if (platform.name === 'linkedin') {
+      formattedContent.linkedin = platform.content
+    } else if (platform.name === 'twitter') {
+      formattedContent.twitter = platform.content
+    }
+  })
+
+  // Determine status based on published field and platform status
+  let status: 'draft' | 'pending' | 'published' = 'draft'
+  
+  if (dbPost.published) {
+    status = 'published'
+  } else if (dbPost.platforms.some((p) => p.published)) {
+    status = 'pending'
+  }
+
+  return {
+    id: dbPost.id,
+    userId: dbPost.userId,
+    rawContent: dbPost.content, // Using content as rawContent
+    formattedContent,
+    imageUrl: dbPost.imageUrl || undefined,
+    status,
+    createdAt: dbPost.createdAt,
+    updatedAt: dbPost.updatedAt,
+  }
 } 

@@ -1,75 +1,10 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
-import { getUserPosts } from "@/services/post.service"
+import { getUserPosts, transformPost } from "@/services/post.service"
 import { getAuthenticatedUserId } from "@/services/auth.service"
 import { redirect } from "next/navigation"
-
-// Type for the transformed post data
-interface TransformedPost {
-  id: string
-  userId: string
-  rawContent: string
-  formattedContent: {
-    linkedin?: string
-    twitter?: string
-  }
-  imageUrl?: string
-  status: 'draft' | 'pending' | 'published'
-  createdAt: string | Date
-  updatedAt: string | Date
-}
-
-// Type for database post with platforms
-interface DbPost {
-  id: string
-  userId: string
-  content: string
-  imageUrl?: string | null
-  published: boolean
-  createdAt: Date
-  updatedAt: Date
-  platforms: Array<{
-    id: string
-    name: string
-    content: string
-    published: boolean
-  }>
-}
-
-// Transform database post to match UI expectations
-function transformPost(dbPost: DbPost): TransformedPost {
-  // Create formattedContent object from platforms
-  const formattedContent: { linkedin?: string; twitter?: string } = {}
-  
-  dbPost.platforms.forEach((platform) => {
-    if (platform.name === 'linkedin') {
-      formattedContent.linkedin = platform.content
-    } else if (platform.name === 'twitter') {
-      formattedContent.twitter = platform.content
-    }
-  })
-
-  // Determine status based on published field and platform status
-  let status: 'draft' | 'pending' | 'published' = 'draft'
-  
-  if (dbPost.published) {
-    status = 'published'
-  } else if (dbPost.platforms.some((p) => p.published)) {
-    status = 'pending'
-  }
-
-  return {
-    id: dbPost.id,
-    userId: dbPost.userId,
-    rawContent: dbPost.content, // Using content as rawContent
-    formattedContent,
-    imageUrl: dbPost.imageUrl || undefined,
-    status,
-    createdAt: dbPost.createdAt,
-    updatedAt: dbPost.updatedAt,
-  }
-}
+import { TransformedPost } from "@/lib/types"
 
 export default async function PostsPage() {
   let posts: TransformedPost[] = []
